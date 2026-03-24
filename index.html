@@ -79,48 +79,8 @@
     }
     #card-close:hover { background:rgba(255,110,180,.25); }
 
-    /* ── MEDIA PLAYER ── */
-    #player {
-      position:fixed; left:50%; bottom:14px; transform:translateX(-50%);
-      display:flex; flex-direction:column; align-items:center; gap:6px;
-      background:rgba(5,0,14,.72); border:1px solid rgba(255,180,220,.2);
-      border-radius:18px; padding:10px 16px 10px;
-      backdrop-filter:blur(10px); z-index:50;
-      opacity:0; transition:opacity 1s ease 1s;
-      min-width:260px; max-width:92vw;
-    }
-    #player.visible { opacity:1; }
-    #track-name {
-      font-family:'Caveat',cursive; font-size:1rem; color:#ffb3d9;
-      text-align:center; white-space:nowrap; overflow:hidden;
-      text-overflow:ellipsis; max-width:240px;
-    }
-    #progress-bar {
-      width:100%; height:4px; border-radius:4px;
-      background:rgba(255,180,220,.18); cursor:pointer; appearance:none; -webkit-appearance:none;
-      accent-color:#ff6eb4;
-    }
-    .ctrl-row { display:flex; gap:10px; align-items:center; }
-    .ctrl-row button {
-      width:36px; height:36px; border-radius:50%;
-      border:1px solid rgba(255,180,220,.28);
-      background:rgba(255,110,180,.1);
-      color:#ffe0f0; font-size:1rem; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      transition:background .2s;
-    }
-    .ctrl-row button:hover { background:rgba(255,110,180,.3); }
-    #vol-row { display:flex; gap:8px; align-items:center; width:100%; }
-    #vol-row span { font-family:'Caveat',cursive; color:#ffb3d9; font-size:.85rem; }
-    #vol-slider {
-      flex:1; height:4px; border-radius:4px;
-      background:rgba(255,180,220,.18); cursor:pointer; appearance:none; -webkit-appearance:none;
-      accent-color:#ff6eb4;
-    }
-    audio { display:none; }
-
     /* ── ERROR ── */
-    .error { position:fixed; inset:auto 10px 80px; background:#260015; color:#ffd9f7; border:1px solid #ff8ae5; border-radius:10px; padding:10px; font:12px system-ui; display:none; z-index:400; }
+    .error { position:fixed; inset:auto 10px 20px; background:#260015; color:#ffd9f7; border:1px solid #ff8ae5; border-radius:10px; padding:10px; font:12px system-ui; display:none; z-index:400; }
 
     @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
     @keyframes pulse  { 0%,100%{opacity:.75} 50%{opacity:1} }
@@ -154,85 +114,13 @@
   </div>
 </div>
 
-<!-- MEDIA PLAYER -->
-<div id="player">
-  <div id="track-name">🎵 Galaxia de Tulipanes</div>
-  <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1">
-  <div class="ctrl-row">
-    <button id="prevBtn" title="Anterior">⏮</button>
-    <button id="playBtn" title="Play/Pausa">▶</button>
-    <button id="nextBtn" title="Siguiente">⏭</button>
-  </div>
-  <div id="vol-row">
-    <span>🔈</span>
-    <input type="range" id="vol-slider" min="0" max="1" step="0.01" value="0.7">
-    <span>🔊</span>
-  </div>
-</div>
 
-<audio id="audio"></audio>
 <div id="err" class="error"></div>
 
 <script>
 (function(){
 const err = document.getElementById('err');
 function showErr(msg){ err.textContent=msg; err.style.display='block'; }
-
-// ══════════════════════════════════════════════════════════════
-// MEDIA PLAYER
-// Canciones gratuitas de Free Music Archive / Pixabay
-// ══════════════════════════════════════════════════════════════
-const playlist = [
-  { title: '🎵 Canción 1', src: 'assets/music/c1.mp3' },
-  { title: '🎵 Canción 2', src: 'assets/music/c2.mp3' },
-  { title: '🎵 Canción 3', src: 'assets/music/c3.mp3' },
-  { title: '🎵 Canción 4', src: 'assets/music/c4.mp3' },
-];
-
-const audio     = document.getElementById('audio');
-const playBtn   = document.getElementById('playBtn');
-const prevBtn   = document.getElementById('prevBtn');
-const nextBtn   = document.getElementById('nextBtn');
-const progress  = document.getElementById('progress-bar');
-const volSlider = document.getElementById('vol-slider');
-const trackName = document.getElementById('track-name');
-
-let trackIdx = 0;
-audio.volume = 0.7;
-
-function loadTrack(idx, autoplay=false){
-  trackIdx = ((idx % playlist.length) + playlist.length) % playlist.length;
-  const t = playlist[trackIdx];
-  audio.src = t.src;
-  trackName.textContent = t.title;
-  progress.value = 0;
-  if(autoplay){ audio.play().then(()=>{ playBtn.textContent='⏸'; }).catch(()=>{}); }
-  else { playBtn.textContent='▶'; }
-}
-
-playBtn.onclick = async ()=>{
-  if(audio.src === '' || audio.src === window.location.href){
-    loadTrack(0, true); return;
-  }
-  try{
-    if(audio.paused){ await audio.play(); playBtn.textContent='⏸'; }
-    else { audio.pause(); playBtn.textContent='▶'; }
-  } catch(e){ showErr('No se pudo reproducir. Verifica tu conexión.'); }
-};
-prevBtn.onclick = ()=> loadTrack(trackIdx-1, !audio.paused);
-nextBtn.onclick = ()=> loadTrack(trackIdx+1, !audio.paused);
-
-audio.addEventListener('ended', ()=> loadTrack(trackIdx+1, true));
-audio.addEventListener('timeupdate', ()=>{
-  if(audio.duration) progress.value = (audio.currentTime/audio.duration)*100;
-});
-progress.addEventListener('input', ()=>{
-  if(audio.duration) audio.currentTime = (progress.value/100)*audio.duration;
-});
-volSlider.addEventListener('input', ()=>{ audio.volume = volSlider.value; });
-
-// Preload first track info
-loadTrack(0, false);
 
 // ══════════════════════════════════════════════════════════════
 // WEBGL CHECK
@@ -639,20 +527,49 @@ function onTap(cx,cy){
 
 // ── CURSOR ────────────────────────────────────────────────────
 const cursorEl=document.getElementById('cursor');
-document.addEventListener('mousemove',e=>{ cursorEl.style.left=e.clientX+'px'; cursorEl.style.top=e.clientY+'px'; });
-document.addEventListener('touchmove',e=>{ const t=e.touches[0]; cursorEl.style.left=t.clientX+'px'; cursorEl.style.top=t.clientY+'px'; },{passive:true});
+
+// Detect touch device — hide cursor entirely on touch screens
+let isTouch = false;
+window.addEventListener('touchstart', ()=>{
+  isTouch = true;
+  cursorEl.style.display = 'none';
+}, {once:true, passive:true});
+
+document.addEventListener('mousemove', e=>{
+  if(isTouch) return;
+  cursorEl.style.left=e.clientX+'px';
+  cursorEl.style.top=e.clientY+'px';
+});
 
 let pdx=0,pdy=0,pMoved=false;
-renderer.domElement.addEventListener('pointerdown',e=>{ pdx=e.clientX;pdy=e.clientY;pMoved=false; cursorEl.classList.add('drag'); });
-renderer.domElement.addEventListener('pointermove',e=>{
-  if(Math.abs(e.clientX-pdx)>5||Math.abs(e.clientY-pdy)>5) pMoved=true;
-  mouse.x=(e.clientX/window.innerWidth)*2-1;
-  mouse.y=-(e.clientY/window.innerHeight)*2+1;
-  raycaster.setFromCamera(mouse,camera);
-  cursorEl.classList.toggle('hover', raycaster.intersectObjects(tulipSprites).length>0 && !pMoved);
+
+renderer.domElement.addEventListener('pointerdown', e=>{
+  pdx=e.clientX; pdy=e.clientY; pMoved=false;
+  if(!isTouch) cursorEl.classList.add('drag');
 });
-renderer.domElement.addEventListener('pointerup',e=>{ cursorEl.classList.remove('drag'); if(!pMoved) onTap(e.clientX,e.clientY); });
-renderer.domElement.addEventListener('touchend',e=>{ if(!pMoved&&e.changedTouches[0]) onTap(e.changedTouches[0].clientX,e.changedTouches[0].clientY); },{passive:true});
+
+renderer.domElement.addEventListener('pointermove', e=>{
+  if(Math.abs(e.clientX-pdx)>5||Math.abs(e.clientY-pdy)>5) pMoved=true;
+  if(!isTouch){
+    mouse.x=(e.clientX/window.innerWidth)*2-1;
+    mouse.y=-(e.clientY/window.innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    cursorEl.classList.toggle('hover', raycaster.intersectObjects(tulipSprites).length>0 && !pMoved);
+  }
+});
+
+renderer.domElement.addEventListener('pointerup', e=>{
+  if(!isTouch) cursorEl.classList.remove('drag');
+  if(!pMoved) onTap(e.clientX, e.clientY);
+});
+
+// Touch: reset cursor state immediately after finger lifts
+renderer.domElement.addEventListener('touchend', e=>{
+  // Always reset — no lingering states
+  cursorEl.classList.remove('drag','hover');
+  cursorEl.style.display='none';
+  if(!pMoved && e.changedTouches[0]) onTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+}, {passive:true});
 
 // ── ANIMATE ──────────────────────────────────────────────────
 let tw=0;
@@ -727,7 +644,6 @@ function startScene(){
   setTimeout(()=>{
     intro.style.display='none';
     document.getElementById('pill').classList.add('visible');
-    document.getElementById('player').classList.add('visible');
   },1400);
 }
 
